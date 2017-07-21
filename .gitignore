@@ -1,0 +1,6 @@
+*.pyo
+*.pyc
+local/*
+metadata/*
+*.csv
+.project

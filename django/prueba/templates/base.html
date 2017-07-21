@@ -1,0 +1,132 @@
+{% extends "splunkdj:base.html" %}
+
+{% load splunkmvc %}
+
+{% block splunkstyles %}{% endblock splunkstyles %}
+
+{% block _css %}
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}/prueba/css/bootstrap.css"/>
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}/prueba/css/dashboard.css"/>
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}/prueba/css/font-awesome/css/font-awesome.min.css" />
+
+    {% block _css_menu_app %}
+    {% endblock _css_menu_app %}
+
+    {% block _css_app %}
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}/prueba/css/style_platform_default.css" />
+    {% endblock _css_app %}
+
+    {% block _css_menu_custom %}
+    <style>
+        div#titleHeader{
+            color: white;
+            position:absolute;
+            font-size:20px;
+            margin: 0.2em 0 0 0.5em !important;
+        }
+        
+        div.splunk-navigation-header ul{
+            margin: 0em !important;
+            padding:0em !important
+        }
+        
+        div.splunk-navigation-header ul{
+            background-color:black;
+            margin-left: 0em;
+            padding-left: 1em;
+            height:auto; 
+        }
+        
+        #logout{
+            font-weight:bold;
+            float:right;
+            color: black;
+            font-size:0.95em;
+            margin:0.7em;
+        }
+        
+        #app_title_header{
+            color:black !important;
+        }
+        
+        #logout:hover{
+            text-decoration:none !important;
+        }
+        
+        div.splunk-app-logo-container {
+            display:none !important;
+        }
+        
+        div.splunk-clear{
+            display:none !important;
+        }
+        
+        header.splunk-ace-header{
+            background:black !important; 
+        }
+        
+        header {
+            min-height: none !important; 
+        }
+        
+        header ul.splunk-account-bar-items{
+            display:none !important;
+        }
+
+        .img_logo{
+            height: 40px;
+            width: 150;
+        }
+        
+    </style>
+    {% endblock _css_menu_custom %}
+
+    {{block.super}} 
+    
+{% endblock _css %}
+
+{% block _js %}
+    {{block.super}}
+    {% component_loader %}
+
+    {% block js %}  {% endblock js %}  
+    
+{% endblock _js %}
+
+{% block header %}
+    <div id="header">
+        <div id="titleHeader">
+            <span id="app_title_header">
+
+            Prueba de concepto - Traffic Violations (<a href="https://catalog.data.gov/dataset/traffic-violations-56dda/resource/450018e7-f6c0-43fd-b5c9-a83de293b206">URL</a>)
+
+            </span>
+        </div>
+        <a href="/en-US/account/logout" id="logout">
+            Cerrar Sesión&nbsp;<i class="fa fa-power-off"></i>
+        </a>
+    </div>
+    
+    <div id="title_user">
+        
+        <span id="username">
+            Bienvenido&nbsp;<span id="realname">Usuario</span> 
+        </span>
+        
+        <div id='cssmenu'>
+        {% block _css_menu %}{% endblock _css_menu %}
+        </div>
+
+    </div>
+
+
+{% endblock header %} 
+
+{% block title %} Prueba de Concepto {% endblock title %}
+
+{% block footer %}
+
+<br />
+<br />
+
+{% endblock footer %}

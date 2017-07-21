@@ -1,0 +1,444 @@
+{% extends "prueba:base.html" %}
+
+{% block css %}
+<meta charset="UTF-8" />
+<link rel='stylesheet' type='text/css' href='{{STATIC_URL}}/prueba/css/jquery.simple-dtpicker.css' />
+{% endblock css %}
+
+{% block content %}
+
+<div id="myheaderview dashboard-body container-fluid main-section-body">
+
+    <table id="filtros">
+        <tr>
+            <td style="padding-bottom:0.5em;">
+                Marca de coche
+            </td>
+            <td id="filtro_valor_value">
+                <input id="filtro_valor" type="text" value="*" style="width:10em;"/>
+            </td>
+
+            <td style="padding-bottom:0.5em;">
+                Fecha Inicio
+            </td>
+            <td>
+                <input type="text" id="fecha_ini" class="datapicker" style="width:8em;"/>
+            </td>
+            
+            <td style="padding-bottom:0.5em;">
+                Fecha Fin
+            </td>
+            <td>
+                <input type="text" id="fecha_fin" class="datapicker" style="width:8em;"/>
+            </td>
+
+            <td style="padding-bottom:1em;">
+                <a href="javascript:aplicarFiltro();" class='button-default button-gestion'>
+                    <i class='fa fa-filter'></i>&nbsp;Filtrar
+                </a>
+            </td>
+
+            <td style="padding-bottom:1em;">
+                <a href="javascript:borrarFiltro();" class='button-default button-gestion'>
+                    <i class='fa fa-trash-o'></i>&nbsp;Borrar Filtro
+                </a>
+            </td>
+
+        </tr>
+    </table>
+
+
+    <div class="dashboard-row boardResumen" id="tabla_estad">
+        <div class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel">
+                
+                <div class="dashboard-element" style="width: 100%;">
+                    <div class="panel-head font-default default">
+
+                        <div id="progressBar1" class="progressBarRunning" style="width:6em;height:1.5;margin:-1em 0 0.8em -1em;">
+                            <div id="progressText1" style="font-size:0.9em;font-weight:bold;color:black;padding-left:1em;">
+                                <img id="loading1" src="/dj/static/prueba/img/loading_small.gif" style="padding-bottom:0.2em;width:1em;height:auto;"/>
+                                <span id="progressNumber1" style="padding-bottom:0.5em;"></span>
+                            </div> 
+                        </div>
+
+                        Estadística - Número de veces que un conductor ha dado positivo en Alcohol con una marca de coche 
+                        
+                        <br />
+
+                    </div>
+
+                    <div class="panel-body">
+
+                        <div id="cuadro" class="tabs" style="margin-top:1em;">
+
+                            <div class="tab-content2" data-first=1 style="">
+                                
+                                <div id="tabla" data-first=1 style="margin:0 0.5em 0 0.5em;"">
+
+
+                                    <div id="tabla_1" style="float:left;width:50.0%; overflow:hidden">
+                                    </div>
+
+                                    <div id="chart_1" style="float:left;width:50.0%; overflow:hidden">
+                                    </div>                      
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+     <div class="dashboard-row boardResumen" id="tabla_estad">
+        <div class="dashboard-cell" style="width: 100%;">
+            <div class="dashboard-panel">
+                
+                <div class="dashboard-element" style="width: 100%;">
+                    <div class="panel-head font-default default">
+
+                        <div id="progressBar2" class="progressBarRunning" style="width:6em;height:1.5;margin:-1em 0 0.8em -1em;">
+                            <div id="progressText2" style="font-size:0.9em;font-weight:bold;color:black;padding-left:1em;">
+                                <img id="loading2" src="/dj/static/prueba/img/loading_small.gif" style="padding-bottom:0.2em;width:1em;height:auto;"/>
+                                <span id="progressNumber2" style="padding-bottom:0.5em;"></span>
+                            </div> 
+                        </div>
+
+                        Estadística - Num de Infracciones por Año localizadas
+                        
+                        <br />
+
+                    </div>
+
+                    <div class="panel-body">
+
+                        <div id="cuadro" class="tabs" style="margin-top:1em;">
+
+                            <div class="tab-content2" data-first=1 style="">
+                                
+                                <div id="tabla" data-first=1 style="margin:0 0.5em 0 0.5em;"">
+
+                                    
+
+                                    <div id="tabla_2" style="float:left;width:50.0%; overflow:hidden">                         
+                                    </div>
+
+                                    <div id="chart_2" style="float:left;width:50.0%; overflow:hidden">
+                                    </div>                      
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+{% endblock content%}
+
+{% block js %}    
+<script type="text/javascript">
+
+requirejs.config({
+    paths: {
+        datetimepicker: "{{STATIC_URL}}/prueba/js/jquery.simple-dtpicker",
+        jqueryui : "{{STATIC_URL}}/prueba/js/jquery-ui",
+    },
+    shim: {
+        'jqueryui' : {
+            deps: ['jquery']
+        },
+        'datetimepicker' : {
+            deps: ['jquery']
+        }
+    }
+});
+
+
+require(["splunkjs/ready!",
+         "splunkjs/mvc",
+         "jquery",
+         "jqueryui",
+         "datetimepicker",
+         "splunkjs/mvc/tableview",
+         "splunkjs/mvc/chartview",
+         "splunkjs/mvc/searchmanager",
+         "splunkjs/mvc/splunkmapview",
+         ], function(mvc) {
+
+        $(function() {
+            $('input#fecha_ini').appendDtpicker({current: "01/01/2010 00:00", dateFormat: "DD/MM/YYYY hh:mm", minuteInterval : 10,
+                firstDayOfWeek: 1, closeOnSelected: true});
+            $('input#fecha_fin').appendDtpicker({current: "18/07/2017 23:59", dateFormat: "DD/MM/YYYY hh:mm", minuteInterval : 10,
+                firstDayOfWeek: 1, closeOnSelected: true});
+        });
+
+
+        var SearchManager = require("splunkjs/mvc/searchmanager");
+        var TableView = require("splunkjs/mvc/tableview");
+        var ChartView = require("splunkjs/mvc/chartview");
+        var SplunkMapView = require("splunkjs/mvc/splunkmapview");
+
+        var tokens = mvc.Components.getInstance("default");
+        tokens.set("filtro_fecha", "")
+        tokens.set("filtro_coche", "")
+        tokens.set("filtro_anyo", "")
+
+        //SEARCH 1
+
+        var search_1 = new SearchManager({
+            id: "search_1",
+            search:  mvc.tokenSafe('{{query_1|safe}}'), 
+            preview: "true"
+        });
+
+        search_1.on('search:progress', function(properties) {
+            $("div#progressBar1").show();
+            $("img#loading1").show();
+
+            var progress = (Math.round(parseFloat(properties.content.doneProgress)* 100))
+
+            if (progress == 0){
+                $("div#progressBar1").css("width", "9em")
+                $("span#progressNumber1").html("Cargando")
+            }else if (progress != 0){
+                $("div#progressBar1").css("width", progress + "%")
+                if(progress == 100){
+                    $("span#progressNumber1").html("Finalizando")
+                }else{
+                    $("span#progressNumber1").html("Cargando "+ progress + "%")
+                }
+            }
+        });
+
+        search_1.on("search:done", function(state, job) {
+            $("span#progressNumber1").html("Terminado !")
+            $("img#loading1").hide();
+        })
+
+        var tabla_1 = new TableView({
+            id: "tabla_1",
+            managerid: "search_1",
+            pagerPosition: "top",
+            //fields:"",
+            drilldown : "none",
+            drilldownRedirect: "false",
+            el: $("div#tabla_1")
+        }).render();
+
+
+        var chart_1 = new ChartView({
+            id: "chart_1",
+            managerid: "search_1",
+            drilldown : "none",
+            drilldownRedirect: "false",
+            el: $("div#chart_1")
+        }).render();
+        
+
+        //SEARCH 2
+
+        var search_2 = new SearchManager({
+            id: "search_2",
+            search:  mvc.tokenSafe('{{query_2|safe}}'), 
+            preview: "true"
+        });
+
+        search_2.on('search:progress', function(properties) {
+            $("div#progressBar2").show();
+            $("img#loading2").show();
+
+            var progress = (Math.round(parseFloat(properties.content.doneProgress)* 100))
+
+            if (progress == 0){
+                $("div#progressBar2").css("width", "9em")
+                $("span#progressNumber2").html("Cargando")
+            }else if (progress != 0){
+                $("div#progressBar2").css("width", progress + "%")
+                if(progress == 100){
+                    $("span#progressNumber2").html("Finalizando")
+                }else{
+                    $("span#progressNumber2").html("Cargando "+ progress + "%")
+                }
+            }
+        });
+
+        search_2.on("search:done", function(state, job) {
+            $("span#progressNumber2").html("Terminado !")
+            $("img#loading2").hide();
+        })
+
+        var tabla_2 = new TableView({
+            id: "tabla_2",
+            managerid: "search_2",
+            pagerPosition: "top",
+            //fields:"",
+            drilldown : "none",
+            drilldownRedirect: "false",
+            el: $("div#tabla_2")
+        }).render();
+
+
+        var search_2_map = new SearchManager({
+            id: "search_2_map",
+            search:  mvc.tokenSafe('{{query_2_map|safe}}'), 
+            preview: "true"
+        });
+
+
+        var chart_2 = new SplunkMapView({
+            id: "chart_2",
+            managerid: "search_2_map",
+            drilldown : "none",
+            drilldownRedirect: "false",
+            tileSource: "splunk",
+            "mapping.map.zoom": 5, // Place complex property names within quotes
+            "mapping.map.center": "(39,-77)", // Center on Washington state
+            "mapping.markerLayer.markerOpacity": 0.6,
+            "mapping.markerLayer.markerMinSize": 15,
+            "height": "300px",
+            el: $("div#chart_2")
+            }).render()
+
+	
+
+
+
+
+        var numCelda = TableView.BaseCellRenderer.extend({
+            canRender: function(cell) {
+              return (cell.field == 'Positivos en Alcohol' || cell.field == 'Num de Infracciones')
+                ;
+            },
+
+            render: function($td, cell) {
+
+                if(cell.value != null){
+
+                    var value = parseInt(cell.value)
+
+                    if (value > 60){
+                        var color = "color:red !important;text-align:center;"
+                    } else if (value >= 20 && value <= 60){
+                        var color = "color:blue !important;text-align:center;"
+                    } else if (value < 20){
+                        var color = "color:green !important;text-align:center;"
+                    }
+
+                    $td.attr("style",color)
+                    $td.html(value)
+                }
+            }
+        })
+
+
+        var tables_render = ["tabla_1",
+                             "tabla_2"]
+
+        for (var x=0;x<tables_render.length;x++){
+            var aux = splunkjs.mvc.Components.getInstance(tables_render[x])
+            aux.table.addCellRenderer(new numCelda());
+            aux.table.render();
+        }
+
+    })
+
+function convertToEpoch(fecha, ini){
+    //Usado en fechas formato DD/MM/YYYY
+    
+    if (ini == true || ini != undefined){
+        var fecha = fecha + " 00:00:00"
+    }else{
+        var fecha = fecha + " 23:59:59"
+    }
+    
+    var formattedDays = fecha.split(" ")[0].split("/");
+    var formattedTime = fecha.split(" ")[1].split(":");
+    var fecha_epoch = new Date(formattedDays[2], formattedDays[1] - 1,formattedDays[0],formattedTime[0],formattedTime[1],formattedTime[2],0).getTime()/1000;
+    return fecha_epoch
+}
+
+function aplicarFiltro(){
+
+    require(["splunkjs/ready!",
+         "splunkjs/mvc",
+         "jquery",
+         ], function(mvc) {
+
+        var tokens = mvc.Components.getInstance("default");
+
+        //FILTRO COCHE
+        var filtro_valor = $("input#filtro_valor").val()
+        
+        if(filtro_valor == "" || filtro_valor=="*"){
+            tokens.set("filtro_coche", "" )
+        }else{
+            tokens.set("filtro_coche", "| eval filtro_coche = upper(\""+filtro_valor+"\") | where coche LIKE filtro_coche ")
+        }
+
+        //FILTRO FECHA
+
+        var fecha_ini = $("input#fecha_ini").val().split(" ")[0]
+        var fecha_ini = convertToEpoch(fecha_ini, true)
+        
+        var filtro_fecha = " | where fecha_epoch > " + fecha_ini
+
+
+        var fecha_fin = $("input#fecha_fin").val().split(" ")[0]
+        var fecha_fin = convertToEpoch(fecha_fin)
+        
+        filtro_fecha += " AND fecha_epoch < " + fecha_fin
+
+        tokens.set("filtro_fecha", filtro_fecha)
+
+        //FILTRO ANYO
+
+        var fecha_ini = $("input#fecha_ini").val().split(" ")[0].split("/")[2]
+        var filtro_anyo = " | where year > " + fecha_ini
+
+        var fecha_fin = $("input#fecha_fin").val().split(" ")[0].split("/")[2]
+        filtro_anyo += " AND year < " + fecha_fin
+        tokens.set("filtro_anyo", filtro_anyo)
+
+
+     })
+
+}
+
+function borrarFiltro(){
+
+    require(["splunkjs/ready!",
+         "splunkjs/mvc",
+         "jquery",
+         ], function(mvc) {
+
+        var filtro_valor = $("input#filtro_valor").val("")
+
+        var tokens = mvc.Components.getInstance("default");
+
+        //FILTRO COCHE
+        tokens.set("filtro_coche", "")
+
+        //FILTRO FECHA
+        tokens.set("filtro_fecha", "")
+
+        //FILTRO ANYO
+        tokens.set("filtro_anyo", "")
+
+     })
+
+}
+
+
+</script>
+
+{% endblock js %}
