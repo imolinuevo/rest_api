@@ -1,11 +1,30 @@
 # -*- coding: utf-8 -*-
+import json
 
 from django.contrib.auth.decorators import login_required
 from splunkdj.decorators.render import render_to
+from django.http import HttpResponse
+from django.views.decorators.http import require_http_methods
+
+def require_post_params(params):
+    def decorator(func):
+        @wraps(func, assigned=available_attrs(func))
+        def inner(request, *args, **kwargs):
+            if not all(param in request.POST for param in params):
+                return HttpResponseBadRequest()
+            return func(request, *args, **kwargs)
+        return inner
+    return decorator
+
+@require_http_methods(["GET"])
+#@require_post_params(params=['email', 'password'])
+def aptest(request):
+    context = {"Test": "Example"}
+
+    return HttpResponse(json.dumps(context), content_type="application/json")
 
 @render_to('prueba:home.html')
 @login_required
-
 def home(request):
 
     query_1 = """
@@ -16,7 +35,7 @@ def home(request):
         $filtro_fecha$
         | rename "Make" as coche
         $filtro_coche$
-        | rename "Alcohol" as alcohol 
+        | rename "Alcohol" as alcohol
         | where alcohol="Yes"
         | stats count by coche
         | rename coche as "Marca de coche" count as "Positivos en Alcohol"
@@ -50,7 +69,7 @@ def home(request):
         "query_2_map":query_2_map,
 
     }
-    
+
     context = { q: ' '.join( context[q].replace("\n"," ").replace("\t"," ").split()) for q in context }
 
     return context
