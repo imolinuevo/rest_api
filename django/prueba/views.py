@@ -14,33 +14,24 @@ def cors_response(context):
     response["Access-Control-Allow-Origin"] = "http://localhost:3000"
     return response
 
+def execute_query(mode, query):
+    service = client.connect(
+        host="localhost",
+        port=8089,
+        username="admin",
+        password="changeme"
+    )
+    kwargs = {"exec_mode": mode}
+    job = service.jobs.create(query, **kwargs)
+    ret = []
+    for result in results.ResultsReader(job.results()):
+        ret.append(result)
+    return ret
+
 @require_http_methods(["GET"])
 def test_get(request):
-    HOST = "localhost"
-    PORT = 8089
-    USERNAME = "admin"
-    PASSWORD = "changeme"
-
-    # Create a Service instance and log in
-    service = client.connect(
-        host=HOST,
-        port=PORT,
-        username=USERNAME,
-        password=PASSWORD)
-
-    ret = []
-    for app in service.apps:
-        ret.append(app.name)
-
-    searchquery_normal = '| inputlookup "traffic_violations.csv" | head 10'
-    kwargs_normalsearch = {"exec_mode": "blocking"}
-    job = service.jobs.create(searchquery_normal, **kwargs_normalsearch)
-
-    retq = []
-    for result in results.ResultsReader(job.results()):
-        retq.append(result)
-
-    context = {"Test": "Example get", "Apps": ret, "Job": job.sid, "Count": job.resultCount, "retq": retq}
+    ret = execute_query(mode="blocking", query='| inputlookup "traffic_violations.csv" | head 10')
+    context = {"Test": "Example get", "ret": ret}
     return cors_response(context)
 
 @csrf_exempt
