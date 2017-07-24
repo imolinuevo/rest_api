@@ -5,23 +5,23 @@ from django.contrib.auth.decorators import login_required
 from splunkdj.decorators.render import render_to
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 
-def require_post_params(params):
-    def decorator(func):
-        @wraps(func, assigned=available_attrs(func))
-        def inner(request, *args, **kwargs):
-            if not all(param in request.POST for param in params):
-                return HttpResponseBadRequest()
-            return func(request, *args, **kwargs)
-        return inner
-    return decorator
+def cors_response(context):
+    response = HttpResponse(json.dumps(context), content_type="application/json")
+    response["Access-Control-Allow-Origin"] = "http://localhost:3000"
+    return response
 
 @require_http_methods(["GET"])
-#@require_post_params(params=['email', 'password'])
-def aptest(request):
-    context = {"Test": "Example"}
+def test_get(request):
+    context = {"Test": "Example get"}
+    return cors_response(context)
 
-    return HttpResponse(json.dumps(context), content_type="application/json")
+@csrf_exempt
+@require_http_methods(["POST"])
+def test_post(request):
+    context = {"Test": "Example post"}
+    return cors_response(context)
 
 @render_to('prueba:home.html')
 @login_required
