@@ -6,6 +6,8 @@ from splunkdj.decorators.render import render_to
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
+import splunklib.client as client
+import splunklib.results as results
 
 def cors_response(context):
     response = HttpResponse(json.dumps(context), content_type="application/json")
@@ -14,7 +16,31 @@ def cors_response(context):
 
 @require_http_methods(["GET"])
 def test_get(request):
-    context = {"Test": "Example get"}
+    HOST = "localhost"
+    PORT = 8089
+    USERNAME = "admin"
+    PASSWORD = "changeme"
+
+    # Create a Service instance and log in
+    service = client.connect(
+        host=HOST,
+        port=PORT,
+        username=USERNAME,
+        password=PASSWORD)
+
+    ret = []
+    for app in service.apps:
+        ret.append(app.name)
+
+    searchquery_normal = '| inputlookup "traffic_violations.csv" | head 10'
+    kwargs_normalsearch = {"exec_mode": "blocking"}
+    job = service.jobs.create(searchquery_normal, **kwargs_normalsearch)
+
+    retq = []
+    for result in results.ResultsReader(job.results()):
+        retq.append(result)
+
+    context = {"Test": "Example get", "Apps": ret, "Job": job.sid, "Count": job.resultCount, "retq": retq}
     return cors_response(context)
 
 @csrf_exempt
