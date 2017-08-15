@@ -10,6 +10,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 import splunklib.client as client
 import splunklib.results as results
+from config import CustomConfig
 
 def require_post_params(params):
     def decorator(func):
@@ -23,17 +24,17 @@ def require_post_params(params):
 
 def cors_response(context):
     response = HttpResponse(json.dumps(context), content_type="application/json")
-    response["Access-Control-Allow-Origin"] = "http://localhost:3000"
+    response["Access-Control-Allow-Origin"] = CustomConfig.CORS_URL
     return response
 
-def execute_query(mode, query):
+def execute_query(query):
     service = client.connect(
-        host="localhost",
-        port=8089,
-        username="admin",
-        password="changeme"
+        host=CustomConfig.SPLUNK_HOST,
+        port=CustomConfig.SPLUNK_PORT,
+        username=CustomConfig.SPLUNK_USERNAME,
+        password=CustomConfig.SPLUNK_PASSWORD
     )
-    kwargs = {"exec_mode": mode}
+    kwargs = {"exec_mode": "blocking"}
     job = service.jobs.create(query, **kwargs)
     ret = []
     for result in results.ResultsReader(job.results()):
@@ -43,7 +44,7 @@ def execute_query(mode, query):
 
 @require_http_methods(["GET"])
 def test_get(request):
-    ret = execute_query(mode="blocking", query='| inputlookup "traffic_violations.csv" | head 10')
+    ret = execute_query('| inputlookup "traffic_violations.csv" | head 10')
     context = {"Test": "Example get", "ret": ret}
     return cors_response(context)
 
@@ -51,7 +52,7 @@ def test_get(request):
 @require_http_methods(["POST"])
 @require_post_params(params=['email'])
 def test_post(request):
-    context = {"Test": "Example post", "p": json.dumps(request.POST)}
+    context = {"Test": "Example post"}
     return cors_response(context)
 
 @render_to('prueba:home.html')

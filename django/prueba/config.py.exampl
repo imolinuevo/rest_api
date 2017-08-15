@@ -1,0 +1,10 @@
+# Create config.py using this example template
+# The new file is excluded from git in order to keep passwords safe
+
+class CustomConfig():
+    SPLUNK_HOST = 'localhost'
+    SPLUNK_PORT = 8089
+    SPLUNK_USERNAME = ""
+    SPLUNK_PASSWORD = ""
+
+    CORS_URL = "http://localhost:3000"
