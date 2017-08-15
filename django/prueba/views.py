@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import json
-
 from django.contrib.auth.decorators import login_required
 from splunkdj.decorators.render import render_to
 from django.http import HttpResponse, HttpResponseBadRequest
@@ -41,19 +40,6 @@ def execute_query(query):
         ret.append(result)
     job.cancel()
     return ret
-
-@require_http_methods(["GET"])
-def test_get(request):
-    ret = execute_query('| inputlookup "traffic_violations.csv" | head 10')
-    context = {"Test": "Example get", "ret": ret}
-    return cors_response(context)
-
-@csrf_exempt
-@require_http_methods(["POST"])
-@require_post_params(params=['email'])
-def test_post(request):
-    context = {"Test": "Example post"}
-    return cors_response(context)
 
 @render_to('prueba:home.html')
 @login_required
