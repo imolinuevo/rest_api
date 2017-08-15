@@ -3,11 +3,23 @@ import json
 
 from django.contrib.auth.decorators import login_required
 from splunkdj.decorators.render import render_to
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
+from django.utils.decorators import available_attrs
+from functools import wraps
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 import splunklib.client as client
 import splunklib.results as results
+
+def require_post_params(params):
+    def decorator(func):
+        @wraps(func, assigned=available_attrs(func))
+        def inner(request, *args, **kwargs):
+            if not all(param in request.POST for param in params):
+                return HttpResponseBadRequest()
+            return func(request, *args, **kwargs)
+        return inner
+    return decorator
 
 def cors_response(context):
     response = HttpResponse(json.dumps(context), content_type="application/json")
@@ -26,6 +38,7 @@ def execute_query(mode, query):
     ret = []
     for result in results.ResultsReader(job.results()):
         ret.append(result)
+    job.cancel()
     return ret
 
 @require_http_methods(["GET"])
@@ -36,8 +49,9 @@ def test_get(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
+@require_post_params(params=['email'])
 def test_post(request):
-    context = {"Test": "Example post"}
+    context = {"Test": "Example post", "p": json.dumps(request.POST)}
     return cors_response(context)
 
 @render_to('prueba:home.html')
