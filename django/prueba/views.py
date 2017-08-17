@@ -2,13 +2,15 @@
 import json
 from django.contrib.auth.decorators import login_required
 from splunkdj.decorators.render import render_to
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseBadRequest, Http404
 from django.utils.decorators import available_attrs
 from functools import wraps
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 import splunklib.client as client
 import splunklib.results as results
+from django.contrib.auth import authenticate
+from datetime import timedelta, date
 from config import CustomConfig
 
 def require_post_params(params):
@@ -40,6 +42,19 @@ def execute_query(query):
         ret.append(result)
     job.cancel()
     return ret
+
+@csrf_exempt
+@require_http_methods(["POST"])
+@require_post_params(params=['username', 'password'])
+def auth_jwt(request):
+    username = request.POST['username']
+    password = request.POST['password']
+    user = authenticate(username=username, password=password)
+    if user == None:
+        raise Http404("Invalid username and password")
+    expiry = date.today() + timedelta(days=1)
+    token = {'username': user.username, 'expiry': str(expiry)}
+    return cors_response(token)
 
 @render_to('prueba:home.html')
 @login_required
