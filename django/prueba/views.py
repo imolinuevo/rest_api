@@ -10,14 +10,15 @@ from django.views.decorators.csrf import csrf_exempt
 import splunklib.client as client
 import splunklib.results as results
 from django.contrib.auth import authenticate
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 from config import CustomConfig
+from jose import jws
 
 def require_post_params(params):
     def decorator(func):
         @wraps(func, assigned=available_attrs(func))
         def inner(request, *args, **kwargs):
-            if not all(param in request.POST for param in params):
+            if request.method != "OPTIONS" and not all(param in request.POST for param in params):
                 return HttpResponseBadRequest()
             return func(request, *args, **kwargs)
         return inner
@@ -26,6 +27,9 @@ def require_post_params(params):
 def cors_response(context):
     response = HttpResponse(json.dumps(context), content_type="application/json")
     response["Access-Control-Allow-Origin"] = CustomConfig.CORS_URL
+    response["Access-Control-Allow-Credentials"] = "true"
+    response["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response["Access-Control-Allow-Methods"] = "GET,PUT,POST,DELETE,PATCH,OPTIONS"
     return response
 
 def execute_query(query):
@@ -44,17 +48,18 @@ def execute_query(query):
     return ret
 
 @csrf_exempt
-@require_http_methods(["POST"])
+@require_http_methods(["POST", "OPTIONS"])
 @require_post_params(params=['username', 'password'])
 def auth_jwt(request):
-    username = request.POST['username']
-    password = request.POST['password']
+    username = "admin"
+    password = "changeme"
     user = authenticate(username=username, password=password)
     if user == None:
         raise Http404("Invalid username and password")
-    expiry = date.today() + timedelta(days=1)
-    token = {'username': user.username, 'expiry': str(expiry)}
-    return cors_response(token)
+    expiry = datetime.now() + timedelta(hours=CustomConfig.JWT_EXPIRATION_HOURS)
+    token = jws.sign({'username': user.username, 'expiry': expiry.strftime('%Y/%m/%d %H:%M:%S'), 'roles': ["admin"]}, 'seKre8', algorithm='HS256')
+    context = {'token': token}
+    return cors_response(context)
 
 @render_to('prueba:home.html')
 @login_required

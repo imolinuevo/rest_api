@@ -8,3 +8,5 @@ class CustomConfig():
     SPLUNK_PASSWORD = ""
 
     CORS_URL = "http://localhost:3000"
+
+    JWT_EXPIRATION_HOURS = 8
