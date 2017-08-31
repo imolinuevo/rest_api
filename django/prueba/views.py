@@ -51,8 +51,8 @@ def execute_query(query):
 @require_http_methods(["POST", "OPTIONS"])
 @require_post_params(params=['username', 'password'])
 def auth_jwt(request):
-    username = "admin"
-    password = "changeme"
+    username = request.POST['username']
+    password = request.POST['password']
     user = authenticate(username=username, password=password)
     if user == None:
         raise Http404("Invalid username and password")
