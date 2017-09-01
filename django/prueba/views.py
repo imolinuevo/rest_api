@@ -2,7 +2,7 @@
 import json
 from django.contrib.auth.decorators import login_required
 from splunkdj.decorators.render import render_to
-from django.http import HttpResponse, HttpResponseBadRequest, Http404
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.utils.decorators import available_attrs
 from functools import wraps
 from django.views.decorators.http import require_http_methods
@@ -32,6 +32,14 @@ def cors_response(context):
     response["Access-Control-Allow-Methods"] = "GET,PUT,POST,DELETE,PATCH,OPTIONS"
     return response
 
+def cors_error_response(message, status_code):
+    response = HttpResponse(message, status=status_code)
+    response["Access-Control-Allow-Origin"] = CustomConfig.CORS_URL
+    response["Access-Control-Allow-Credentials"] = "true"
+    response["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response["Access-Control-Allow-Methods"] = "GET,PUT,POST,DELETE,PATCH,OPTIONS"
+    return response
+
 def execute_query(query):
     service = client.connect(
         host=CustomConfig.SPLUNK_HOST,
@@ -55,9 +63,9 @@ def auth_jwt(request):
     password = request.POST['password']
     user = authenticate(username=username, password=password)
     if user == None:
-        raise Http404("Invalid username and password")
-    expiry = datetime.now() + timedelta(hours=CustomConfig.JWT_EXPIRATION_HOURS)
-    token = jws.sign({'username': user.username, 'expiry': expiry.strftime('%Y/%m/%d %H:%M:%S'), 'roles': ["admin"]}, 'seKre8', algorithm='HS256')
+        return cors_error_response('Unauthorized', 401)
+    expirity = datetime.now() + timedelta(hours=CustomConfig.JWT_EXPIRATION_HOURS)
+    token = jws.sign({'username': user.username, 'expirity': expirity.strftime('%Y/%m/%d %H:%M:%S'), 'roles': ["admin"]}, 'seKre8', algorithm='HS256')
     context = {'token': token}
     return cors_response(context)
 
