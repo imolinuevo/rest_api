@@ -69,7 +69,7 @@ def auth_jwt(request):
     context = {'token': token}
     return cors_response(context)
 
-@render_to('prueba:home.html')
+@render_to('rest_api:home.html')
 @login_required
 def home(request):
     return {}

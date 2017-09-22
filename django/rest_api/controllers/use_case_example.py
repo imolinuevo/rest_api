@@ -1,7 +1,7 @@
 import json
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
-from prueba.views import require_post_params, cors_response, execute_query
+from rest_api.views import require_post_params, cors_response, execute_query
 
 @require_http_methods(["GET", "OPTIONS"])
 def test_get(request):
