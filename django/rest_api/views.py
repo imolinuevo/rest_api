@@ -24,16 +24,19 @@ def require_post_params(params):
         return inner
     return decorator
 
-def cors_response(context):
-    response = HttpResponse(json.dumps(context), content_type="application/json")
-    response["Access-Control-Allow-Origin"] = CustomConfig.CORS_URL
-    response["Access-Control-Allow-Credentials"] = "true"
-    response["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    response["Access-Control-Allow-Methods"] = "GET,PUT,POST,DELETE,PATCH,OPTIONS"
-    return response
+def require_jwt():
+    def decorator(func):
+        @wraps(func, assigned=available_attrs(func))
+        def inner(request, *args, **kwargs):
+            authorization = request.META.get('HTTP_AUTHORIZATON', None)
+            if authorization == None:
+                return cors_response('Invalid JSON Web Token', 401)
+            return func(request, *args, **kwargs)
+        return inner
+    return decorator
 
-def cors_error_response(message, status_code):
-    response = HttpResponse(message, status=status_code)
+def cors_response(context, status_code):
+    response = HttpResponse(json.dumps(context), content_type="application/json", status=status_code)
     response["Access-Control-Allow-Origin"] = CustomConfig.CORS_URL
     response["Access-Control-Allow-Credentials"] = "true"
     response["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
@@ -63,11 +66,18 @@ def auth_jwt(request):
     password = request.POST['password']
     user = authenticate(username=username, password=password)
     if user == None:
-        return cors_error_response('Unauthorized', 401)
+        return cors_response('Unauthorized', 401)
     expirity = datetime.now() + timedelta(hours=CustomConfig.JWT_EXPIRATION_HOURS)
-    token = jws.sign({'username': user.username, 'expirity': expirity.strftime('%Y/%m/%d %H:%M:%S'), 'roles': ["admin"]}, 'seKre8', algorithm='HS256')
-    context = {'token': token}
-    return cors_response(context)
+    token = jws.sign(
+        {
+            'username': user.username,
+            'expirity': expirity.strftime('%Y/%m/%d %H:%M:%S')
+        },
+        'seKre8',
+        algorithm='HS256'
+    )
+    context = {'token': token, 'user': type(user)}
+    return cors_response(context, 200)
 
 @render_to('rest_api:home.html')
 @login_required
