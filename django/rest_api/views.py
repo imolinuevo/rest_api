@@ -12,7 +12,7 @@ import splunklib.results as results
 from django.contrib.auth import authenticate
 from datetime import timedelta, date, datetime
 from config import CustomConfig
-from jose import jws
+from jose import jwt
 
 def require_post_params(params):
     def decorator(func):
@@ -30,7 +30,12 @@ def require_jwt():
         def inner(request, *args, **kwargs):
             authorization = request.META.get('HTTP_AUTHORIZATON', None)
             if authorization == None:
-                return cors_response('Invalid JSON Web Token', 401)
+                return cors_response('JSON Web Token is required', 401)
+            else:
+                decoded_token = jwt.decode(authorization, CustomConfig.JWT_SECRET_KEY, algorithms=CustomConfig.JWT_ALGORITHM)
+                is_expired = datetime.strptime(decoded_token['expirity'], '%Y/%m/%d %H:%M:%S') < datetime.now()
+                if(is_expired):
+                    return cors_response('JSON Web Token expired', 401)
             return func(request, *args, **kwargs)
         return inner
     return decorator
@@ -68,15 +73,15 @@ def auth_jwt(request):
     if user == None:
         return cors_response('Unauthorized', 401)
     expirity = datetime.now() + timedelta(hours=CustomConfig.JWT_EXPIRATION_HOURS)
-    token = jws.sign(
+    token = jwt.encode(
         {
             'username': user.username,
             'expirity': expirity.strftime('%Y/%m/%d %H:%M:%S')
         },
-        'seKre8',
-        algorithm='HS256'
+        CustomConfig.JWT_SECRET_KEY,
+        algorithm = CustomConfig.JWT_ALGORITHM
     )
-    context = {'token': token, 'user': type(user)}
+    context = {'token': token}
     return cors_response(context, 200)
 
 @render_to('rest_api:home.html')
