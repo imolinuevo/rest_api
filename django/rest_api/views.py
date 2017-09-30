@@ -32,10 +32,13 @@ def require_jwt():
             if authorization == None:
                 return cors_response('JSON Web Token is required', 401)
             else:
-                decoded_token = jwt.decode(authorization, CustomConfig.JWT_SECRET_KEY, algorithms=CustomConfig.JWT_ALGORITHM)
-                is_expired = datetime.strptime(decoded_token['expirity'], '%Y/%m/%d %H:%M:%S') < datetime.now()
-                if(is_expired):
-                    return cors_response('JSON Web Token expired', 401)
+                try:
+                  decoded_token = jwt.decode(authorization, CustomConfig.JWT_SECRET_KEY, algorithms=CustomConfig.JWT_ALGORITHM)
+                  is_expired = datetime.strptime(decoded_token['expirity'], '%Y/%m/%d %H:%M:%S') < datetime.now()
+                  if(is_expired):
+                      return cors_response('JSON Web Token expired', 401)
+                except:
+                  return cors_response('JSON Web Token is required', 401)
             return func(request, *args, **kwargs)
         return inner
     return decorator
