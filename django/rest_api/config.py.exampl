@@ -11,3 +11,4 @@ class CustomConfig():
 
     JWT_EXPIRATION_HOURS = 8
     JWT_SECRET_KEY = 'seKre8'
+    JWT_ALGORITHM = 'HS256'

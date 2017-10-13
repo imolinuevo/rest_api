@@ -28,7 +28,7 @@ def require_jwt():
     def decorator(func):
         @wraps(func, assigned=available_attrs(func))
         def inner(request, *args, **kwargs):
-            authorization = request.META.get('HTTP_AUTHORIZATON', None)
+            authorization = request.META.get('HTTP_JWT', None)
             if authorization == None:
                 return cors_response('JSON Web Token is required', 401)
             else:
